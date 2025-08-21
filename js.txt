@@ -1,0 +1,339 @@
+To help you prepare for the technical round of a Senior Frontend Engineer interview at Bharti Airtel or Xtelify Limited, I’ll 
+provide a curated set of practice questions that align with the previously asked interview questions for Airtel’s Senior Frontend 
+Engineer role, as well as the skills you’ve explored (e.g., JavaScript polyfills like `call`, `apply`, `bind`, and array manipulation
+like flattening). These questions focus on JavaScript fundamentals, React, Data Structures and Algorithms (DSA), frontend system 
+design, and browser/networking concepts, which are critical for Airtel’s interviews based on candidate experiences from 2022–2025. 
+I’ll include a mix of coding problems, conceptual questions, and a system design task to simulate the technical round, with 
+solutions and explanations to help you practice effectively.
+
+### Practice Questions for Airtel Senior Frontend Engineer Technical Round
+
+#### 1. JavaScript Fundamentals
+These questions test your deep understanding of JavaScript, a key focus in Airtel interviews.
+
+**Question 1: Implement `Array.prototype.map` from Scratch**
+- Write a function `Array.prototype.myMap` that mimics `Array.prototype.map` without using built-in methods. It should take a callback 
+and an optional `thisArg` for context.
+- **Example**: `[1, 2, 3].myMap(x => x * 2)` should return `[2, 4, 6]`.
+
+**Solution**:
+```javascript
+Array.prototype.myMap = function(callback, thisArg) {
+  const result = [];
+  for (let i = 0; i < this.length; i++) {
+    result.push(callback.call(thisArg, this[i], i, this));
+  }
+  return result;
+};
+
+// Test
+console.log([1, 2, 3].myMap(x => x * 2)); // [2, 4, 6]
+const obj = { multiplier: 2 };
+console.log([1, 2, 3].myMap(function(x) { return x * this.multiplier; }, obj)); // [2, 4, 6]
+```
+- **Explanation**: Iterates through the array, applies `callback` with `thisArg` as context (using `call` to mimic native behavior), 
+and collects results. Handle edge cases like empty arrays or missing `thisArg`.
+- **Why Asked**: Tests understanding of `this`, function context, and array iteration, common in Airtel interviews.
+
+**Question 2: Implement a Debounce Function**
+- Write a `debounce` function that limits how often a function (e.g., an event handler) is called. It should take a function and 
+delay (ms) as arguments and return a debounced version.
+- **Example**: Used in a search input to delay API calls until typing stops.
+
+**Solution**:
+```javascript
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
+// Test
+const log = debounce(console.log, 1000);
+log("test1"); // Won't log immediately
+setTimeout(() => log("test2"), 500); // Won't log
+setTimeout(() => log("test3"), 1500); // Logs "test3" after 1s from last call
+```
+- **Explanation**: Uses `setTimeout` to delay execution. Clears previous timeout if called again within `delay`. Uses `apply` to 
+pass arguments and context. Critical for optimizing UI events in React apps.
+- **Why Asked**: Common in frontend roles for performance optimization (e.g., search bars in Airtel Payments Bank UI).
+
+**Question 3: Explain the Event Loop with Code**
+- Explain how the JavaScript event loop handles asynchronous code, and write a code snippet to demonstrate `setTimeout` and `Promise` 
+interaction.
+- **Example**: Predict the output of:
+  ```javascript
+  console.log("Start");
+  setTimeout(() => console.log("Timeout"), 0);
+  Promise.resolve().then(() => console.log("Promise"));
+  console.log("End");
+  ```
+
+**Solution**:
+- **Output**: `Start`, `End`, `Promise`, `Timeout`
+- **Explanation**: JavaScript is single-threaded with an event loop. Synchronous code (`console.log`) runs first. Microtasks 
+(Promises via `then`) have higher priority than macrotasks (`setTimeout`). So, `Start` and `End` run immediately, `Promise` runs 
+next (microtask queue), then `Timeout` (macrotask queue).
+- **Practice**: Write variations with nested `setTimeout` or multiple `then` chains and predict outputs.
+- **Why Asked**: Tests understanding of async JavaScript, crucial for handling API calls in frontend apps.
+
+#### 2. React Framework
+React is a key technology in Airtel/Xtelify roles, with questions on hooks, performance, and component design.
+
+**Question 4: Build a Text Highlighter Component**
+- Create a React component that highlights all occurrences of a search term in a given text. Ensure it’s case-insensitive and 
+performant.
+- **Example**: Input: text = "Hello world", search = "lo" → Output: "Hel<span>lo</span> wor<span>ld</span>".
+
+**Solution**:
+```javascript
+import { useMemo } from 'react';
+
+function TextHighlighter({ text, searchTerm }) {
+  const highlightedText = useMemo(() => {
+    if (!searchTerm) return text;
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.split(regex).map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
+      ) : (
+        part
+      )
+    );
+  }, [text, searchTerm]);
+
+  return <div>{highlightedText}</div>;
+}
+
+// Test
+// <TextHighlighter text="Hello world" searchTerm="lo" />
+```
+- **Explanation**: Uses `useMemo` to cache the highlighted text, preventing re-renders on unchanged inputs. `RegExp` with `gi` 
+flags ensures case-insensitive matching. Splits text and wraps matches in `<span>`. Keys ensure React’s efficient rendering.
+- **Why Asked**: Tests React hooks, performance optimization, and DOM manipulation, common in Airtel interviews.
+
+**Question 5: Explain useEffect Cleanup**
+- Explain why cleanup is needed in `useEffect` and provide an example with a real-world scenario (e.g., event listener or API polling).
+
+**Solution**:
+- **Explanation**: `useEffect` cleanup prevents memory leaks or stale data issues when components unmount or dependencies change. 
+For example, removing event listeners or clearing timers ensures resources are freed.
+- **Example**:
+  ```javascript
+  import { useEffect, useState } from 'react';
+
+  function WindowResize() {
+    const [width, setWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+      const handleResize = () => setWidth(window.innerWidth);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize); // Cleanup
+    }, []);
+
+    return <div>Window width: {width}px</div>;
+  }
+  ```
+- **Why Cleanup?** Without the cleanup (removing the event listener), multiple listeners could accumulate if the component remounts, 
+causing performance issues or bugs.
+- **Why Asked**: Tests React lifecycle management, critical for Airtel’s high-scale UI apps.
+
+#### 3. Data Structures and Algorithms (DSA)
+Airtel interviews often include 1-2 moderate DSA problems, focusing on arrays, strings, or recursion.
+
+**Question 6: Swap Kth Element from Start and End**
+- Write a function to swap the Kth element from the start and end of an array. Handle edge cases (e.g., invalid K, empty array).
+- **Example**: `swapKth([1, 2, 3, 4, 5], 2)` → `[1, 4, 3, 2, 5]`.
+
+**Solution**:
+```javascript
+function swapKth(arr, k) {
+  if (!arr.length || k < 1 || k > arr.length) return arr;
+  [arr[k - 1], arr[arr.length - k]] = [arr[arr.length - k], arr[k - 1]];
+  return arr;
+}
+
+// Test
+console.log(swapKth([1, 2, 3, 4, 5], 2)); // [1, 4, 3, 2, 5]
+console.log(swapKth([], 1)); // []
+console.log(swapKth([1], 1)); // [1]
+```
+- **Explanation**: Uses array destructuring for a clean swap. Checks for invalid inputs (empty array, out-of-bounds k). Modifies the 
+array in place for efficiency.
+- **Why Asked**: Tests array manipulation and edge case handling, common in Airtel’s coding rounds.
+
+**Question 7: Minimum Characters for Palindrome**
+- Write a function to find the minimum number of characters to append to make a string palindromic.
+- **Example**: Input: "abc" → Output: 2 (append "cb" to get "abccba").
+
+**Solution**:
+```javascript
+function minCharsForPalindrome(str) {
+  let left = 0;
+  let right = str.length - 1;
+  let charsNeeded = 0;
+
+  while (left < right) {
+    if (str[left] !== str[right]) {
+      charsNeeded++;
+      right--;
+    } else {
+      left++;
+      right--;
+    }
+  }
+
+  return charsNeeded;
+}
+
+// Test
+console.log(minCharsForPalindrome("abc")); // 2
+console.log(minCharsForPalindrome("race")); // 1
+console.log(minCharsForPalindrome("aba")); // 0
+```
+- **Explanation**: Compares characters from both ends. If they don’t match, increment `charsNeeded` and move right pointer 
+(simulating appending characters). If they match, move both pointers. Returns minimum characters needed.
+- **Why Asked**: Tests string manipulation and logic, a frequent DSA topic in Airtel interviews.
+
+#### 4. Frontend System Design
+Senior roles often include designing scalable frontend systems or components.
+
+**Question 8: Design a Reusable Modal System**
+- Design a React-based modal system that supports multiple modals, accessibility, and state management. Explain the architecture 
+and key considerations.
+- **Requirements**: Handle multiple modals (stacking), ensure accessibility (ARIA), and manage state (e.g., open/close).
+
+**Solution**:
+```javascript
+import { useState, createContext, useContext } from 'react';
+
+// Context for modal state
+const ModalContext = createContext();
+
+function ModalProvider({ children }) {
+  const [modals, setModals] = useState([]);
+
+  const openModal = (content, props) => {
+    setModals(prev => [...prev, { content, props, id: Date.now() }]);
+  };
+
+  const closeModal = (id) => {
+    setModals(prev => prev.filter(modal => modal.id !== id));
+  };
+
+  return (
+    <ModalContext.Provider value={{ openModal, closeModal }}>
+      {children}
+      {modals.map(({ content: Content, props, id }) => (
+        <div
+          key={id}
+          role="dialog"
+          aria-modal="true"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000 + 
+          modals.length }}
+        >
+          <div style={{ background: 'white', margin: '100px auto', padding: '20px', width: '300px' }}>
+            <Content {...props} />
+            <button onClick={() => closeModal(id)}>Close</button>
+          </div>
+        </div>
+      ))}
+    </ModalContext.Provider>
+  );
+}
+
+// Hook to use modal
+function useModal() {
+  return useContext(ModalContext);
+}
+
+// Example usage
+function App() {
+  const { openModal } = useModal();
+  return (
+    <button onClick={() => openModal(({ name }) => <div>Hello, {name}!</div>, { name: 'Alice' })}>
+      Open Modal
+    </button>
+  );
+}
+
+// Wrap app with provider
+function Root() {
+  return (
+    <ModalProvider>
+      <App />
+    </ModalProvider>
+  );
+}
+```
+- **Explanation**:
+  - **Context API**: Manages modal state (open/close) centrally.
+  - **Modal Stack**: Stores modals in an array, allowing multiple modals with unique IDs.
+  - **Accessibility**: Uses `role="dialog"` and `aria-modal` for screen readers.
+  - **Z-Index**: Increments per modal to ensure proper stacking.
+  - **Usage**: `openModal` takes a component and props; `closeModal` removes by ID.
+- **Considerations**: Handle focus trapping (for accessibility), keyboard navigation (e.g., Esc to close), and animations for UX.
+- **Why Asked**: Tests system design for reusable, scalable components, relevant for Airtel’s UI-heavy platforms.
+
+#### 5. Browser and Networking
+Airtel’s telecom focus means networking and browser questions are common for seniors.
+
+**Question 9: Explain CSRF and Mitigation**
+- Explain what Cross-Site Request Forgery (CSRF) is and how to prevent it in a frontend application.
+
+**Solution**:
+- **Explanation**:
+  - **CSRF**: An attack where a malicious site tricks a user’s browser into sending unauthorized requests to a trusted site 
+  (e.g., a bank) using the user’s session cookies.
+  - **Mitigation**:
+    - **CSRF Tokens**: Include a unique token in forms/APIs, validated server-side. Frontend fetches token via API and includes 
+    it in requests (e.g., `X-CSRF-Token` header).
+    - **SameSite Cookies**: Set cookies with `SameSite=Strict` or `Lax` to block cross-origin requests.
+    - **Validate Origin**: Check `Origin` or `Referer` headers server-side.
+    - **Example in React**:
+      ```javascript
+      async function submitForm(data) {
+        const response = await fetch('/api/csrf-token');
+        const { token } = await response.json();
+        await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': token },
+          body: JSON.stringify(data),
+        });
+      }
+      ```
+- **Why Asked**: Tests security knowledge, critical for Airtel’s customer-facing apps (e.g., Payments Bank).
+
+**Question 10: DNS and How It Works**
+- Explain what DNS is and how it resolves a domain name to an IP address.
+
+**Solution**:
+- **Explanation**:
+  - **DNS (Domain Name System)**: Translates human-readable domain names (e.g., `airtel.in`) to IP addresses (e.g., `192.168.1.1`).
+  - **Process**:
+    1. Browser queries DNS resolver (e.g., ISP’s DNS server).
+    2. Resolver checks cache; if not found, queries root servers.
+    3. Root servers direct to TLD (Top-Level Domain) servers (e.g., `.in`).
+    4. TLD servers point to authoritative name servers for the domain.
+    5. Authoritative server returns the IP address.
+    6. Resolver caches and returns the IP to the browser.
+  - **Frontend Relevance**: DNS impacts page load times; CDNs use DNS for load balancing.
+- **Why Asked**: Airtel’s telecom background emphasizes networking knowledge for seniors.
+
+### Practice Plan
+- **Daily Coding**: Solve 2-3 questions daily (1 JS, 1 React, 1 DSA) on LeetCode or CodePen. Time yourself (15-20 mins per problem).
+- **Mock Interviews**: Use Pramp or Interviewing.io to practice live coding. Explain your approach aloud, as Airtel values 
+communication.
+- **Conceptual Prep**: Review MDN for JS (closures, prototypes), React docs for hooks, and networking basics (e.g., TCP vs. UDP).
+- **System Design**: Practice designing components (e.g., autocomplete, infinite scroll) and explain scalability/performance 
+trade-offs.
+- **Test Edge Cases**: For each coding problem, list edge cases (e.g., empty inputs, null, large datasets) and test them.
+
+### Why These Questions?
+These align with Airtel’s interview patterns (e.g., polyfills, React components, array manipulation, security) and your prior focus 
+on `call`, `apply`, `bind`, and array flattening. They cover the technical round’s scope: coding, frameworks, DSA, and system design. 
+If you want more questions (e.g., Angular-specific, additional DSA, or system design), a mock interview simulation, or solutions for 
+specific Airtel questions (e.g., “Check Armstrong Number”), let me know! You can also test these in a browser console to build 
+confidence.
